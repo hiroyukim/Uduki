@@ -63,6 +63,9 @@ __PACKAGE__->add_trigger(
 
         # Cache control.
         $res->header( 'Cache-Control' => 'private' );
+
+        # dbh disconnect
+        $c->dbh->disconnect();
     },
 );
 
