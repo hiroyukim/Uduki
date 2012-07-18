@@ -4,6 +4,7 @@ use warnings;
 use utf8;
 use parent qw/Uduki Amon2::Web/;
 use File::Spec;
+use Text::Markdown;
 
 # dispatcher
 use Uduki::Web::Dispatcher;
@@ -23,6 +24,7 @@ use Text::Xslate;
         'module'   => [ 'Text::Xslate::Bridge::Star' ],
         'function' => {
             c => sub { Amon2->context() },
+            text_markdown => sub { Text::Markdown->new->markdown(@_) },
             uri_with => sub { Amon2->context()->req->uri_with(@_) },
             uri_for  => sub { Amon2->context()->uri_for(@_) },
             static_file => do {

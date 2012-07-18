@@ -22,13 +22,11 @@
     <div class="navbar navbar-fixed-top">
         <div class="navbar-inner">
             <div class="container">
-                <a class="brand" href="#">Uduki</a>
+                <a class="brand" href="/">Uduki</a>
                 <div class="nav-collapse">
                     <ul class="nav">
-                        <li class="active"><a href="#">Home</a></li>
-                        <li><a href="#">Link</a></li>
-                        <li><a href="#">Link</a></li>
-                        <li><a href="#">Link</a></li>
+                        <li><a href="/">編集</a></li>
+                        <li><a href="/diary/list">一覧</a></li>
                     </ul>
                 </div>
             </div>
