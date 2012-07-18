@@ -14,5 +14,5 @@ CREATE TABLE diary (
   created_on   date         NOT NULL,
   updated_at   TIMESTAMP,
   PRIMARY KEY (`id`),
-  INDEX created_on (created_on)
+  UNIQUE created_on (created_on)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
