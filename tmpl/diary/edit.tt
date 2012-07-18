@@ -4,7 +4,7 @@
 
 <form method="POST" action="/diary/edit">
     <input type="hidden" name="created_on" value="">
-    <div width="500"><textarea name="body" cols="100%" rows="30"></textarea></div>
+    <textarea name="body" cols="100%" rows="30"></textarea>
     <div><input type="submit" value="編集"></div>
 </form>
 

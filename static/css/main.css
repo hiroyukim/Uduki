@@ -16,6 +16,10 @@ pre {
     margin-bottom: 2em;
 }
 
+textarea {
+    width:100%;
+}
+
 footer {
     text-align: right;
     padding-right: 10px;
