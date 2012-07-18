@@ -2,6 +2,20 @@ body {
     margin-top: 50px;
 }
 
+p {
+    margin-top: 1em;
+}
+
+h2 {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+pre {
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
 footer {
     text-align: right;
     padding-right: 10px;
