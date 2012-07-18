@@ -1,19 +1,10 @@
-use File::Spec;
-use File::Basename qw(dirname);
-my $basedir = File::Spec->rel2abs(File::Spec->catdir(dirname(__FILE__), '..'));
-my $dbpath;
-if ( -d '/home/dotcloud/') {
-    $dbpath = "/home/dotcloud/test.db";
-} else {
-    $dbpath = File::Spec->catfile($basedir, 'db', 'test.db');
-}
 +{
     'DBI' => [
-        "dbi:SQLite:dbname=$dbpath",
-        '',
+        "dbi:mysql:dbname=test_uduki",
+        'root',
         '',
         +{
-            sqlite_unicode => 1,
+            RootClass => 'DBIx::Simple::Inject',
         }
     ],
 };
