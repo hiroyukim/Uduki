@@ -10,6 +10,10 @@
             <div>[% diary.body | text_markdown | raw  %]</div>
         </div>
     [% END %]
+    
+    [% INCLUDE 'include/pager.tt' WITH pager=pager %]
+[% ELSE %]
+    <div>現在記録はありません</div>
 [% END %]
 
 [% END %]
