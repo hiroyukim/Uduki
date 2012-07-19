@@ -2,6 +2,28 @@
 
 <h2>[% diary.created_on %]</h2>
 
+<script>
+    function apiTagList() {
+        $.getJSON('/api/tag/list',{
+            diary_id: "[% diary.id %]"
+        },function(data){
+            console.log(data); 
+            if( data.tags.length > 0 ) {
+        
+            }
+            else {
+                $('#apiTagList').html("tagはありません。");
+            }
+        });
+    }
+    
+    $(document).ready(function(){
+        apiTagList();
+    });
+</script>
+
+<div id="apiTagList"></div>
+
 <form method="POST" action="/diary/edit">
     <input type="hidden" name="created_on" value="">
     <textarea name="body" cols="100%" rows="30"></textarea>
