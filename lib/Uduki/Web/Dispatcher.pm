@@ -93,7 +93,9 @@ post '/api/tag/add' => sub {
     my $tag_name = $c->req->param('tag_name');
     my $diary_id = $c->req->param('diary_id');
 
-    my $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash || do {
+    my $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash; 
+   
+    unless( $tag ) {
         $c->dbh->begin_work();
         try {
             $c->dbh->do(q{INSERT INTO tag (name) VALUES(?)},{}, 
@@ -107,7 +109,7 @@ post '/api/tag/add' => sub {
             Carp::croak($err);
         };
        
-        $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash;
+        $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash;
     };
 
     unless( $c->dbh->query('SELECT * FROM diary_tag WHERE diary_id = ? AND tag_id = ?',$diary_id,$tag->{id})->hash ) { 
@@ -135,9 +137,8 @@ get '/api/tag/list' => sub {
     my ($c) = @_;
 
     if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$c->req->param('diary_id'))->hashes ) {
-        my ($stmt,@bind) = $c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } });             
         $c->render_json(+{
-            tags => [$c->dbh->query($stmt,@bind)->hashes], 
+            tags => [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes], 
         });
     }
     else {

@@ -7,12 +7,29 @@
         $.getJSON('/api/tag/list',{
             diary_id: "[% diary.id %]"
         },function(data){
-            console.log(data); 
             if( data.tags.length > 0 ) {
-        
+                var html = [];
+                html.push('<input type="text" onchange="apiTagAdd(value)">');
+                for( var index in data.tags ) {
+                    var tag = data.tags[index];
+                    html.push( '<span id="' + tag.id + '_[% diary.id %]">' + tag.name + '</span>' ); 
+                }
+
+                $('#apiTagList').html(html.join(" "));
             }
             else {
-                $('#apiTagList').html("tagはありません。");
+                $('#apiTagList').html('<input type="text" onchange="apiTagAdd(value)">');
+            }
+        });
+    }
+
+    function apiTagAdd(tag_name) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/tag/add',
+            data: { tag_name: tag_name, diary_id: [% diary.id %] },
+            success: function(data){
+                apiTagList();
             }
         });
     }
@@ -21,6 +38,9 @@
         apiTagList();
     });
 </script>
+
+<div>
+</div>
 
 <div id="apiTagList"></div>
 
