@@ -31,5 +31,6 @@ CREATE TABLE diary_tag (
     tag_id   int(10)      NOT NULL,
     updated_at   TIMESTAMP,
     PRIMARY KEY (`id`),
+    INDEX tag_id (tag_id),
     UNIQUE diary_id_tag_id (diary_id,tag_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
