@@ -3,9 +3,9 @@
 <h2>[% diary.created_on %]</h2>
 
 <script>
-    function apiTagList(diary_id) {
+    function apiTagList() {
         $.getJSON('/api/tag/list',{
-            diary_id: diary_id 
+            diary_id: [% diary.id %] 
         },function(data){
             if( data.tags.length > 0 ) {
                 var html = [];
