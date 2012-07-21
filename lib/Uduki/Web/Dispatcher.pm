@@ -148,7 +148,10 @@ post '/api/tag/edit' => sub {
                 $tag->{id},
             );
             
-            my $diary_tag = $c->dbh->query('SELECT COUNT(id) AS count FROM diary_tag WHERE diary_id != ? AND tag_id = ?')->hash;
+            my $diary_tag = $c->dbh->query('SELECT COUNT(id) AS count FROM diary_tag WHERE diary_id != ? AND tag_id = ?',
+                $diary_id,
+                $tag->{id},
+            )->hash;
             
             if( int($diary_tag->{count}) == 0 ) {
                 $c->dbh->do(q{DELETE FROM tag WHERE id = ?},{}, 
