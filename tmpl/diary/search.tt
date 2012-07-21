@@ -1,0 +1,21 @@
+[% WRAPPER 'include/layout.tt' %]
+
+
+
+[% IF diaries && diaries.size() > 0 %]
+
+    [% INCLUDE 'include/pager.tt' WITH pager=pager %]
+
+    [% FOR diary IN diaries %]
+        <div style="border: 1px solid #cccccc;">
+            <h2 style="color:#cccccc;border-bottom: 1px solid #cccccc;">[% diary.created_on %]</h2>
+            <div>[% diary.body | text_markdown | raw  %]</div>
+        </div>
+    [% END %]
+    
+    [% INCLUDE 'include/pager.tt' WITH pager=pager %]
+[% ELSE %]
+    <div>現在記録はありません</div>
+[% END %]
+
+[% END %]
