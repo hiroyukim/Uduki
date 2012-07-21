@@ -2,6 +2,24 @@ body {
     margin-top: 50px;
 }
 
+p {
+    margin-top: 1em;
+}
+
+h1,h2 {
+    margin-top: 0px;
+    margin-bottom: 1em;
+}
+
+pre {
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
+
+textarea {
+    width:100%;
+}
+
 footer {
     text-align: right;
     padding-right: 10px;

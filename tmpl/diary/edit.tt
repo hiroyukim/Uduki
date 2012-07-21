@@ -2,9 +2,50 @@
 
 <h2>[% diary.created_on %]</h2>
 
+<script>
+    function apiTagList(diary_id) {
+        $.getJSON('/api/tag/list',{
+            diary_id: diary_id 
+        },function(data){
+            if( data.tags.length > 0 ) {
+                var html = [];
+                html.push('<input type="text" onchange="apiTagEdit(value)">');
+                for( var index in data.tags ) {
+                    var tag = data.tags[index];
+                    html.push( '<a href="/diary/search?tag_id=' + tag.id +'" >' + tag.name + '</span>' ); 
+                }
+
+                $('#apiTagList').html(html.join(" "));
+            }
+            else {
+                $('#apiTagList').html('<input type="text" onchange="apiTagEdit(value)">');
+            }
+        });
+    }
+
+    function apiTagEdit(tag_name) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/tag/edit',
+            data: { tag_name: tag_name, diary_id: [% diary.id %] },
+            success: function(data){
+                apiTagList();
+            }
+        });
+    }
+    $(document).ready(function(){
+        apiTagList();
+    });
+</script>
+
+<div>
+</div>
+
+<div id="apiTagList"></div>
+
 <form method="POST" action="/diary/edit">
     <input type="hidden" name="created_on" value="">
-    <div width="500"><textarea name="body" cols="100%" rows="30"></textarea></div>
+    <textarea name="body" cols="100%" rows="30"></textarea>
     <div><input type="submit" value="編集"></div>
 </form>
 
