@@ -3,37 +3,36 @@
 <h2>[% diary.created_on %]</h2>
 
 <script>
-    function apiTagList() {
+    function apiTagList(diary_id) {
         $.getJSON('/api/tag/list',{
-            diary_id: "[% diary.id %]"
+            diary_id: diary_id 
         },function(data){
             if( data.tags.length > 0 ) {
                 var html = [];
-                html.push('<input type="text" onchange="apiTagAdd(value)">');
+                html.push('<input type="text" onchange="apiTagEdit(value)">');
                 for( var index in data.tags ) {
                     var tag = data.tags[index];
-                    html.push( '<span id="' + tag.id + '_[% diary.id %]">' + tag.name + '</span>' ); 
+                    html.push( '<a href="/diary/search?tag_id=' + tag.id +'" >' + tag.name + '</span>' ); 
                 }
 
                 $('#apiTagList').html(html.join(" "));
             }
             else {
-                $('#apiTagList').html('<input type="text" onchange="apiTagAdd(value)">');
+                $('#apiTagList').html('<input type="text" onchange="apiTagEdit(value)">');
             }
         });
     }
 
-    function apiTagAdd(tag_name) {
+    function apiTagEdit(tag_name) {
         $.ajax({
             type: 'POST',
-            url: '/api/tag/add',
+            url: '/api/tag/edit',
             data: { tag_name: tag_name, diary_id: [% diary.id %] },
             success: function(data){
                 apiTagList();
             }
         });
     }
-    
     $(document).ready(function(){
         apiTagList();
     });

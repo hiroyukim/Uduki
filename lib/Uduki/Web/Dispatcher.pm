@@ -6,6 +6,7 @@ use Amon2::Web::Dispatcher::Lite;
 use Uduki::DateTime;
 use Try::Tiny;
 use Data::Page;
+use SQL::Abstract::Limit; 
 
 any '/' => sub {
     my ($c) = @_;
@@ -67,27 +68,54 @@ any '/diary/edit' => sub {
     });
 };    
 
-get '/diary/list' => sub {
+get '/diary/search' => sub {
     my ($c) = @_;
 
-    my $page = $c->req->param('page') || 1;
-    my $rows = $c->req->param('rows') || 10;
+    my $page   = $c->req->param('page') || 1;
+    my $rows   = $c->req->param('rows') || 10;
 
-    my $diaries = $c->dbh->selectall_arrayref(q{SELECT SQL_CALC_FOUND_ROWS * FROM diary ORDER BY created_on DESC LIMIT ?,?},{ Columns => {} },
-        ( ($page - 1) * $rows),
-        $rows,
-    );
+    my $cond = {};
+
+    if( my $tag_id = $c->req->param('tag_id') ) {
+        my @diary_tags = $c->dbh->query('SELECT diary_id FROM diary_tag WHERE tag_id = ?',$tag_id)->hashes; 
+        $cond->{id} = { -in => [map { $_->{diary_id} } @diary_tags ] };
+    }
+
+    $c->dbh->abstract( SQL::Abstract::Limit->new( limit_dialect => $c->dbh ) );
+        
+    my $diaries = $c->dbh->query(
+        $c->dbh->abstract->select(
+            'diary',
+            'SQL_CALC_FOUND_ROWS *',
+            $cond,
+            [ 
+                { -desc => [qw/created_on/] }
+            ],
+            ( ($page - 1) * $rows),
+            $rows,
+        )
+    )->hashes;
    
     my $found_rows = $c->dbh->query('SELECT FOUND_ROWS()')->array;
     my $total      = $found_rows->[0];
 
-    $c->render('/diary/list.tt',{
+    $c->render('/diary/search.tt',{
         diaries => $diaries, 
         pager   => Data::Page->new($total, $rows, $page),
+        getTags    => sub {
+            my $diary_id = shift;
+
+            if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$diary_id)->hashes ) { 
+                return [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes]; 
+            }
+            else {
+                return;
+            }
+        },
     });
 };
 
-post '/api/tag/add' => sub {
+post '/api/tag/edit' => sub {
     my ($c) = @_;
 
     my $tag_name = $c->req->param('tag_name');
@@ -112,7 +140,31 @@ post '/api/tag/add' => sub {
         $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash;
     };
 
-    unless( $c->dbh->query('SELECT * FROM diary_tag WHERE diary_id = ? AND tag_id = ?',$diary_id,$tag->{id})->hash ) { 
+    if( $c->dbh->query('SELECT * FROM diary_tag WHERE diary_id = ? AND tag_id = ?',$diary_id,$tag->{id})->hash ) { 
+        $c->dbh->begin_work();
+        try {
+            $c->dbh->do(q{DELETE FROM diary_tag WHERE diary_id = ? AND tag_id = ?},{}, 
+                $diary_id,
+                $tag->{id},
+            );
+            
+            my $diary_tag = $c->dbh->query('SELECT COUNT(id) AS count FROM diary_tag WHERE diary_id != ? AND tag_id = ?')->hash;
+            
+            if( int($diary_tag->{count}) == 0 ) {
+                $c->dbh->do(q{DELETE FROM tag WHERE id = ?},{}, 
+                    $tag->{id},
+                );
+            }
+
+            $c->dbh->commit();
+        }
+        catch {
+            my $err = shift;
+            $c->dbh->rollback();
+            Carp::croak($err);
+        };
+    }
+    else {
         $c->dbh->begin_work();
         try {
             $c->dbh->do(q{INSERT INTO diary_tag (diary_id,tag_id) VALUES(?,?)},{}, 
@@ -126,7 +178,7 @@ post '/api/tag/add' => sub {
             $c->dbh->rollback();
             Carp::croak($err);
         };
-    };
+    }
 
     $c->render_json(+{
         result => 'ok',
