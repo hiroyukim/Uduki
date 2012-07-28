@@ -1,11 +1,11 @@
 [% WRAPPER 'include/layout.tt' %]
 
-<h2>[% diary.created_on %]</h2>
+<h2>[% diary.created_on || created_on %]</h2>
 
 <script>
     function apiTagList() {
         $.getJSON('/api/tag/list',{
-            diary_id: [% diary.id %] 
+            created_on: '[% diary.created_on || created_on %]' 
         },function(data){
             if( data.tags.length > 0 ) {
                 var html = [];
@@ -27,7 +27,7 @@
         $.ajax({
             type: 'POST',
             url: '/api/tag/edit',
-            data: { tag_name: tag_name, diary_id: [% diary.id %] },
+            data: { tag_name: tag_name, created_on: '[% diary.created_on || created_on %]' },
             success: function(data){
                 apiTagList();
             }
@@ -40,7 +40,6 @@
 
 <div>
 </div>
-
 <div id="apiTagList"></div>
 
 <form method="POST" action="/diary/edit">
