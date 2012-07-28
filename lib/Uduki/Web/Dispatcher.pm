@@ -10,43 +10,25 @@ use SQL::Abstract::Limit;
 
 any '/' => sub {
     my ($c) = @_;
-
-    my $today = Uduki::DateTime->today();
-
-    my $diary = $c->dbh->query('SELECT id,created_on FROM diary WHERE created_on = ?',$today->strftime("%Y-%m-%d"))->hash;
-
-    unless($diary) {
-        $c->dbh->begin_work();
-        try {
-            $c->dbh->do(q{INSERT INTO diary (body,created_on) VALUES('',?)},{}, 
-                $today->strftime("%Y-%m-%d")
-            );
-            $c->dbh->commit();
-        }
-        catch {
-            my $err = shift;
-            $c->dbh->rollback();
-            Carp::croak($err);
-        };
-    }
-    
-    $c->redirect('/diary/edit',{
-        created_on => $today->strftime("%Y-%m-%d"),
-    });
+    $c->redirect('/diary/edit');
 };
 
 any '/diary/edit' => sub {
     my ($c) = @_;
 
-    my $diary = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$c->req->param('created_on') )->hash; 
+    my $created_on = $c->req->param('created_on') || Uduki::DateTime->today()->strftime("%Y-%m-%d");
 
-    unless( $diary ) {
-        $c->redirect('/');
-    }
+    my $diary = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$c->req->param('created_on') )->hash; 
 
     if( $c->req->method eq 'POST' && $c->req->param('created_on') && $c->req->param('body') ) {
         $c->dbh->begin_work();
         try {
+            unless($diary) {
+                $c->dbh->do(q{INSERT INTO diary (body,created_on) VALUES('',?)},{}, 
+                    $c->req->param('created_on'),
+                );
+            }
+
             $c->dbh->do('UPDATE diary SET body = ? WHERE created_on = ?',{},
                 $c->req->param('body'),
                 $c->req->param('created_on'),
@@ -62,9 +44,11 @@ any '/diary/edit' => sub {
         return $c->redirect('/');
     }
 
-    $c->fillin_form($diary);
+    $c->fillin_form($diary) if $diary;
+warn $created_on;
     $c->render('/diary/edit.tt',{
         diary => $diary, 
+        created_on => $created_on,
     });
 };    
 
@@ -118,11 +102,18 @@ get '/diary/search' => sub {
 post '/api/tag/edit' => sub {
     my ($c) = @_;
 
-    my $tag_name = $c->req->param('tag_name');
-    my $diary_id = $c->req->param('diary_id');
+    my $tag_name   = $c->req->param('tag_name');
+    my $created_on = $c->req->param('created_on');
+    
+    unless( $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$created_on )->hash ) {
+        $c->dbh->do(q{INSERT INTO diary (body,created_on) VALUES('',?)},{}, 
+            $created_on
+        );
+    }
 
-    my $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash; 
-   
+    my $tag   = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash; 
+    my $diary = $c->dbh->query('SELECT id FROM diary WHERE created_on = ?',$created_on)->hash; 
+
     unless( $tag ) {
         $c->dbh->begin_work();
         try {
@@ -140,16 +131,16 @@ post '/api/tag/edit' => sub {
         $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash;
     };
 
-    if( $c->dbh->query('SELECT * FROM diary_tag WHERE diary_id = ? AND tag_id = ?',$diary_id,$tag->{id})->hash ) { 
+    if( $c->dbh->query('SELECT * FROM diary_tag WHERE diary_id = ? AND tag_id = ?',$diary->{id},$tag->{id})->hash ) { 
         $c->dbh->begin_work();
         try {
             $c->dbh->do(q{DELETE FROM diary_tag WHERE diary_id = ? AND tag_id = ?},{}, 
-                $diary_id,
+                $diary->{id},
                 $tag->{id},
             );
             
             my $diary_tag = $c->dbh->query('SELECT COUNT(id) AS count FROM diary_tag WHERE diary_id != ? AND tag_id = ?',
-                $diary_id,
+                $diary->{id},
                 $tag->{id},
             )->hash;
             
@@ -171,7 +162,7 @@ post '/api/tag/edit' => sub {
         $c->dbh->begin_work();
         try {
             $c->dbh->do(q{INSERT INTO diary_tag (diary_id,tag_id) VALUES(?,?)},{}, 
-                $diary_id,
+                $diary->{id},
                 $tag->{id},
             );
             $c->dbh->commit();
@@ -191,7 +182,9 @@ post '/api/tag/edit' => sub {
 get '/api/tag/list' => sub {
     my ($c) = @_;
 
-    if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$c->req->param('diary_id'))->hashes ) {
+    my $diary = $c->dbh->query('SELECT id,created_on FROM diary WHERE created_on = ?',$c->req->param('created_on'))->hash;
+
+    if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$diary->{id})->hashes ) {
         $c->render_json(+{
             tags => [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes], 
         });
