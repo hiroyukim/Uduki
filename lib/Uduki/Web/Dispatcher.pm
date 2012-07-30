@@ -18,20 +18,20 @@ any '/diary/edit' => sub {
 
     my $created_on = $c->req->param('created_on') || Uduki::DateTime->today()->strftime("%Y-%m-%d");
 
-    my $diary = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$c->req->param('created_on') )->hash; 
+    my $diary = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$created_on )->hash; 
 
-    if( $c->req->method eq 'POST' && $c->req->param('created_on') && $c->req->param('body') ) {
+    if( $c->req->method eq 'POST' && $created_on && $c->req->param('body') ) {
         $c->dbh->begin_work();
         try {
             unless($diary) {
                 $c->dbh->do(q{INSERT INTO diary (body,created_on) VALUES('',?)},{}, 
-                    $c->req->param('created_on'),
+                    $created_on,
                 );
             }
 
             $c->dbh->do('UPDATE diary SET body = ? WHERE created_on = ?',{},
                 $c->req->param('body'),
-                $c->req->param('created_on'),
+                $created_on,
             );
             $c->dbh->commit();
         }
@@ -45,9 +45,8 @@ any '/diary/edit' => sub {
     }
 
     $c->fillin_form($diary) if $diary;
-warn $created_on;
     $c->render('/diary/edit.tt',{
-        diary => $diary, 
+        diary      => $diary, 
         created_on => $created_on,
     });
 };    
