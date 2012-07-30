@@ -1,0 +1,16 @@
+[% IF pager %]
+    <div class="pagination">
+        <ul data-role="listview" data-inset="true" data-filter="false">
+            [% IF pager.previous_page %]
+                <li><a href="[% uri_with({page => pager.previous_page}) %]" >&larr; Back</a><li>
+            [% ELSE %]
+                <li><a href="#">&larr; Back</a><li>
+            [% END %]
+            [% IF pager.next_page %]
+                <li><a href="[% uri_with({page => pager.next_page}) %]">Next &rarr;</a><li>
+            [% ELSE %]
+                <li><a href="#">Next &rarr;</a><li>
+            [% END %]
+        </ul>
+    </div>
+[% END %]
