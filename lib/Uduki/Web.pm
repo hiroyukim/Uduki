@@ -3,8 +3,8 @@ use strict;
 use warnings;
 use utf8;
 use parent qw/Uduki Amon2::Web/;
-use File::Spec;
-use Text::Markdown;
+use HTTP::MobileAgent;
+use HTTP::MobileAgent::Plugin::SmartPhone;
 
 # dispatcher
 use Uduki::Web::Dispatcher;
@@ -13,38 +13,20 @@ sub dispatch {
 }
 
 # setup view class
-use Text::Xslate;
+use Uduki::Web::View;
 {
+         
     my $view_conf = __PACKAGE__->config->{'Text::Xslate'} || +{};
-    unless (exists $view_conf->{path}) {
-        $view_conf->{path} = [ File::Spec->catdir(__PACKAGE__->base_dir(), 'tmpl') ];
-    }
-    my $view = Text::Xslate->new(+{
-        'syntax'   => 'TTerse',
-        'module'   => [ 'Text::Xslate::Bridge::Star' ],
-        'function' => {
-            c => sub { Amon2->context() },
-            text_markdown => sub { Text::Markdown->new->markdown(@_) },
-            uri_with => sub { Amon2->context()->req->uri_with(@_) },
-            uri_for  => sub { Amon2->context()->uri_for(@_) },
-            static_file => do {
-                my %static_file_cache;
-                sub {
-                    my $fname = shift;
-                    my $c = Amon2->context;
-                    if (not exists $static_file_cache{$fname}) {
-                        my $fullpath = File::Spec->catfile($c->base_dir(), $fname);
-                        $static_file_cache{$fname} = (stat $fullpath)[9];
-                    }
-                    return $c->uri_for($fname, { 't' => $static_file_cache{$fname} || 0 });
-                }
-            },
-        },
-        %$view_conf
-    });
-    sub create_view { $view }
-}
+    my $base_dir  = __PACKAGE__->base_dir();
+    my ($view_pc,$view_mobile) = map { 
+        Uduki::Web::View->create({ base_dir => $base_dir, view_conf => $view_conf, view_paths => $_ }) 
+    } ([qw/tmpl/],[qw/tmpl mobile/]);
 
+    sub create_view {  
+        my ($c) = @_;
+        ( HTTP::MobileAgent->new($c->req->env)->is_smartphone ) ? $view_mobile : $view_pc;
+    }
+}
 
 # load plugins
 __PACKAGE__->load_plugins(
