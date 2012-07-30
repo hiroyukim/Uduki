@@ -20,6 +20,7 @@ WriteMakefile(
         'DateTime'                        => '0',
         'Text::Marddown'                  => '0',
         'SQL::Abstract::Limit'            => '0',
+        'HTTP::MobileAgent::Plugin::SmartPhone' => '0.02',
     },
     MIN_PERL_VERSION => '5.008001',
     (-d 'xt' and $ENV{AUTOMATED_TESTING} || $ENV{RELEASE_TESTING}) ? (
