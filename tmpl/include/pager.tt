@@ -23,4 +23,5 @@
             [% END %]
         </ul>
     </div>
+    <div>[% pager.first %]-[% pager.last %]/[% pager.total_entries %]</div>
 [% END %]
