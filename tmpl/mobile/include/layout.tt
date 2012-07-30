@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>[% title || 'Uduki' %]</title>
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="format-detection" content="telephone=no" />
+    <script src="[% static_file('/static/js/jquery-1.7.2.min.js') %]"></script>
+    <script src="[% static_file('/static/jquery.mobile/jquery.mobile-1.1.1.min.js') %]"></script>
+    <link href="[% static_file('/static/jquery.mobile/jquery.mobile-1.1.1.min.css') %]" rel="stylesheet" type="text/css" />
+</head>
+<body[% IF bodyID %] id="[% bodyID %]"[% END %]>
+    <div data-role="page">
+        <div class="container">
+            <div data-role="header">
+                <ul data-role="listview" data-inset="true" data-filter="false">
+                    <li><a href="/">編集</a></li>
+                    <li><a href="/diary/search">一覧</a></li>
+                </ul>
+            </div>
+            <div data-role="content">
+                [% content %]
+            </div>
+    </div>
+</body>
+</html>
