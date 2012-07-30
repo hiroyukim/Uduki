@@ -2,9 +2,11 @@ package Uduki::DateTime;
 use strict;
 use warnings;
 use DateTime;
+use DateTime::Format::Strptime;
 use DateTime::TimeZone;
 use Smart::Args;
 
+our $LOCALE    =  'ja';
 our $TIME_ZONE =  DateTime::TimeZone->new( name => 'Asia/Tokyo' ); 
 
 sub new {
@@ -12,6 +14,7 @@ sub new {
     my %args = @_;
 
     unless( $args{time_zone} ) {
+        $args{locale}    = $LOCALE,
         $args{time_zone} = $TIME_ZONE;
     }
 
@@ -20,12 +23,12 @@ sub new {
 
 sub now      {
     my $self = shift;
-    DateTime->now( time_zone => $TIME_ZONE );
+    DateTime->now( locale      => $LOCALE, time_zone => $TIME_ZONE );
 }
 
 sub today    {
     my $self = shift;
-    DateTime->today( time_zone => $TIME_ZONE );
+    DateTime->today( locale      => $LOCALE, time_zone => $TIME_ZONE );
 }
 
 sub strptime {
@@ -34,6 +37,8 @@ sub strptime {
          my $pattern => 'Str';
 
     my $strp = new DateTime::Format::Strptime(
+        locale      => $LOCALE,
+        time_zone   => $TIME_ZONE,
         pattern     => $pattern,
         time_zone   => $TIME_ZONE,
     );

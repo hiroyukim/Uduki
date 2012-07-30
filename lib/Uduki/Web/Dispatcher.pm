@@ -83,6 +83,13 @@ get '/diary/search' => sub {
     my $total      = $found_rows->[0];
 
     $c->render('/diary/search.tt',{
+        strptime => sub {
+            my ($string,$pattern) = @_;
+            Uduki::DateTime->strptime({
+                string  => $string,
+                pattern => $pattern,
+            });
+        },
         diaries => $diaries, 
         pager   => Data::Page->new($total, $rows, $page),
         getTags    => sub {
