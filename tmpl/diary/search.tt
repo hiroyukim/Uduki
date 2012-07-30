@@ -6,7 +6,7 @@
 
     [% FOR diary IN diaries %]
         <div style="border: 1px solid #cccccc;">
-            <h2 style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;">[% diary.created_on %]</h2>
+            <h2 style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;">[% diary.created_on %] ([% strptime( diary.created_on, "%Y-%m-%d" ).day_abbr() %])</h2>
             <div style="color:#cccccc;border-bottom: 1px solid #cccccc;" id="diary_id_[% diary.id %]">
                 [%- FOR tag IN getTags(diary.id) %]<a href="/diary/search?tag_id=[% tag.id %]">[% tag.name %]</a> [% END %]
             </div> 
