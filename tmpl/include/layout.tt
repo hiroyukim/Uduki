@@ -7,13 +7,17 @@
     <meta http-equiv="Content-Script-Type" content="text/javascript" />
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
     <meta name="format-detection" content="telephone=no" />
-        <script src="[% uri_for('/static/js/jquery-1.7.2.min.js') %]"></script>
+    <script src="[% uri_for('/static/js/date-utils.min.js') %]"></script>
+    <script src="[% uri_for('/static/js/jquery-1.7.2.min.js') %]"></script>
+    <script src="[% uri_for('/static/js/jquery-ui-1.8.17.custom.min.js') %]"></script>
     <link href="[% uri_for('/static/bootstrap/bootstrap.css') %]" rel="stylesheet" type="text/css" />
-    <script src="[% uri_for('/static/bootstrap/bootstrap-dropdown.js') %]"></script>
-
-
     <link href="[% static_file('/static/css/main.css') %]" rel="stylesheet" type="text/css" media="screen" />
+    <script src="[% uri_for('/static/bootstrap/bootstrap-dropdown.js') %]"></script>
     <script src="[% static_file('/static/js/main.js') %]"></script>
+    <link rel="stylesheet" type="text/css" href="[% static_file('/static/js/fullcalendar/fullcalendar.css') %]" />
+    <link rel="stylesheet" type="text/css" href="[% static_file('/static/js/fullcalendar/fullcalendar.print.css') %]" />
+    <script src="[% uri_for('/static/js/fullcalendar/fullcalendar.min.js') %]"></script>
+
     <!--[if lt IE 9]>
         <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
@@ -27,6 +31,7 @@
                     <ul class="nav">
                         <li><a href="/">編集</a></li>
                         <li><a href="/diary/search">一覧</a></li>
+                        <li><a href="/diary/cal">月別</a></li>
                     </ul>
                 </div>
             </div>

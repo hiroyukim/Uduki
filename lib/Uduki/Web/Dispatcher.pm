@@ -51,6 +51,43 @@ any '/diary/edit' => sub {
     });
 };    
 
+get '/diary/cal' => sub {
+    my ($c) = @_;
+
+    my $month = $c->req->param('month') || Uduki::DateTime->today->strftime("%Y-%m");
+
+    my $diaries = $c->dbh->query(
+        q{SELECT id,created_on FROM diary WHERE created_on LIKE CONCAT(?,'%')},$month
+    )->hashes;
+
+    $c->render('/diary/cal.tt',{
+        diaries => $diaries,
+        month => $month,
+    });
+};
+
+get '/api/diary/cal' => sub {
+    my ($c) = @_;
+
+    my $month = $c->req->param('month') || Uduki::DateTime->today->strftime("%Y-%m");
+
+    my $diaries = $c->dbh->query(
+        q{SELECT id,body,created_on FROM diary WHERE created_on LIKE CONCAT(?,'%')},$month
+    )->hashes;
+
+    $c->render_json(
+        [ map {
+            +{
+                start => $_->{created_on},
+                title => do {
+                    my @titles = ($_->{body} =~ /^#\s+([^#\n]+)$/mg);
+                    join(",",map { "[" . $_ . "]" } @titles);
+                },
+            }
+        } @{$diaries}],
+    );
+};
+
 get '/diary/search' => sub {
     my ($c) = @_;
 
