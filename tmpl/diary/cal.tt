@@ -1,0 +1,34 @@
+[% WRAPPER 'include/layout.tt' %]
+
+<script type='text/javascript'>
+
+	$(document).ready(function() {
+		$('#calendar').fullCalendar({
+			events: function(start,end,callback) {
+                var target_month = start.clone().addDays(15).toFormat("YYYY-MM");
+                $.ajax({
+                    url: '/api/diary/cal',
+                    dataType: 'json',
+                    data: {
+                        "month": target_month,
+                    },
+                    success: function(doc) {
+                        var events = [];
+                        $(doc).each(function() {
+                            events.push({
+                                title: $(this).attr('title'),
+                                start: $(this).attr('start') // will be parsed
+                            });
+                        });
+                        callback(events);
+                    }
+                });
+            },
+		});
+	});
+
+</script>
+
+<div id='calendar'></div>
+
+[% END %]
