@@ -56,12 +56,7 @@ get '/diary/cal' => sub {
 
     my $month = $c->req->param('month') || Uduki::DateTime->today->strftime("%Y-%m");
 
-    my $diaries = $c->dbh->query(
-        q{SELECT id,created_on FROM diary WHERE created_on LIKE CONCAT(?,'%')},$month
-    )->hashes;
-
     $c->render('/diary/cal.tt',{
-        diaries => $diaries,
         month => $month,
     });
 };
