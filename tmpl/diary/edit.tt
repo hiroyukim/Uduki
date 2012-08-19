@@ -3,6 +3,16 @@
 <h2>[% diary.created_on || created_on %]</h2>
 
 <script>
+    function apiPreview(body) {
+        $.ajax({
+            type: 'POST', //FIXME
+            url:  '/api/preview',
+            data: { body: body },
+            success: function(data){
+                $('#mainright').html(data);
+            }
+        });
+    }
     function apiTagList() {
         $.getJSON('/api/tag/list',{
             created_on: '[% diary.created_on || created_on %]' 
@@ -35,17 +45,22 @@
     }
     $(document).ready(function(){
         apiTagList();
+        apiPreview($('#edit_body').val());
     });
 </script>
 
-<div>
-</div>
-<div id="apiTagList"></div>
+<div id="mainleft" style=" width: 48%; float:left;">
+    <div id="apiTagList"></div>
 
-<form method="POST" action="/diary/edit">
-    <input type="hidden" name="created_on" value="">
-    <textarea name="body" cols="100%" rows="30"></textarea>
-    <div><input type="submit" value="編集"></div>
-</form>
+    <form method="POST" action="/diary/edit">
+        <input type="hidden" name="created_on" value="">
+        <textarea id="edit_body" name="body" cols="100%" rows="30" onkeyup="apiPreview(value)"></textarea>
+        <div><input type="submit" value="編集"></div>
+    </form>
+</div>
+
+<div id="mainright" style=" margin-left:52%;">
+
+</div>
 
 [% END %]

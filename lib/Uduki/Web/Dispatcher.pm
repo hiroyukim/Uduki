@@ -110,7 +110,8 @@ get '/diary/search' => sub {
             $rows,
         )
     )->hashes;
-   
+  
+    #FXIME only mysql change +1 see http://blog.64p.org/entry/2012/08/06/140119
     my $found_rows = $c->dbh->query('SELECT FOUND_ROWS()')->array;
     my $total      = $found_rows->[0];
 
@@ -232,6 +233,20 @@ get '/api/tag/list' => sub {
             tags => [], 
         });
     }
+};
+
+post '/api/preview' => sub {
+    my ($c) = @_;
+
+    my $html;
+    try {
+        $html = Text::Markdown->new->markdown($c->req->param('body'));
+    }
+    catch {
+        Carp::confess(shift);
+    };
+
+    return $c->create_response(200,['Content-Type' => 'text/html'],Encode::encode('utf8',$html));
 };
 
 1;
