@@ -235,18 +235,4 @@ get '/api/tag/list' => sub {
     }
 };
 
-post '/api/preview' => sub {
-    my ($c) = @_;
-
-    my $html;
-    try {
-        $html = Text::Markdown->new->markdown($c->req->param('body'));
-    }
-    catch {
-        Carp::confess(shift);
-    };
-
-    return $c->create_response(200,['Content-Type' => 'text/html'],Encode::encode('utf8',$html));
-};
-
 1;
