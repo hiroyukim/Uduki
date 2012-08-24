@@ -16,6 +16,26 @@ markdownで記述する日々のメモ帳です。日付が代わると自動的
     cat sql/mysql.sql | mysql -uroot -p
     plackup 
 
+# 全文検索エンジンへの対応
+
+全文検索エンジンを入れなくても検索ができるようにしてありますがパフォーマンスを考えると
+mroongaなどをinstallすることをおすすめします。installしたらconfigのfull_text_searchを1へ
+変更してください。
+
+## mroonga
+
+基本MySQLに対応した全文検索エンジンなら蕩くと思いますがmroongaがお勧めです。
+
+<http://mroonga.github.com/ja/>
+
+こちらのinstallガイドにしたがってmroongaを入れてください。
+
+http://mroonga.github.com/ja/docs/install.html
+
+## config/*.pl
+
+    full_text_search => 1
+
 # Author
 
     Hiroyuki Yamanaka
