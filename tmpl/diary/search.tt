@@ -1,12 +1,21 @@
 [% WRAPPER 'include/layout.tt' %]
 
+<form method="get" action="/diary/search">
+    <input type="text"   name="word" value="">
+    <input type="submit" value="search">
+</form>
+
 [% IF diaries && diaries.size() > 0 %]
+
+    <div>
+        [% FOR diary IN diaries %]<a href="#[% diary.created_on %]">[% diary.created_on %]([% strptime( diary.created_on, "%Y-%m-%d" ).day_abbr() %])</a>/[% END %]
+    </div>
 
     [% INCLUDE 'include/pager.tt' WITH pager=pager %]
 
     [% FOR diary IN diaries %]
+        <h2 id="[% diary.created_on %]" style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;">[% diary.created_on %] ([% strptime( diary.created_on, "%Y-%m-%d" ).day_abbr() %])</h2>
         <div style="border: 1px solid #cccccc;">
-            <h2 style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;">[% diary.created_on %] ([% strptime( diary.created_on, "%Y-%m-%d" ).day_abbr() %])</h2>
             <div style="color:#cccccc;border-bottom: 1px solid #cccccc;" id="diary_id_[% diary.id %]">
                 [%- FOR tag IN getTags(diary.id) %]<a href="/diary/search?tag_id=[% tag.id %]">[% tag.name %]</a> [% END %]
             </div> 
