@@ -88,26 +88,53 @@ get '/diary/search' => sub {
 
     my $page   = $c->req->param('page') || 1;
     my $rows   = $c->req->param('rows') || 10;
+    my $offset = ($page - 1) * $rows;
 
     my $cond = {};
+   
+    $c->dbh->abstract(SQL::Abstract::Limit->new( 
+        limit_dialect => $c->dbh, 
+        special_ops => [{
+            regex => qr/^match$/i,
+            handler => sub {
+                my ($self, $field, $op, $arg) = @_;
+                $arg = [$arg] if not ref $arg;
+                my $label         = $self->_quote($field);
+                my ($placeholder) = $self->_convert('?');
+                my $placeholders  = join ", ", (($placeholder) x @$arg);
+                my $sql           = $self->_sqlcase('match') . " ($label) "
+                                    . $self->_sqlcase('against') . " ($placeholders) ";
+                my @bind = $self->_bindtype($field, @$arg);
+                return ($sql, @bind);
+            }
+        }],
+    ));
 
     if( my $tag_id = $c->req->param('tag_id') ) {
         my @diary_tags = $c->dbh->query('SELECT diary_id FROM diary_tag WHERE tag_id = ?',$tag_id)->hashes; 
         $cond->{id} = { -in => [map { $_->{diary_id} } @diary_tags ] };
     }
 
-    $c->dbh->abstract( SQL::Abstract::Limit->new( limit_dialect => $c->dbh ) );
-        
+    # http://search.cpan.org/~frew/SQL-Abstract-1.73/lib/SQL/Abstract.pm#SPECIAL_OPERATORS
+    if( my $word = $c->req->param('word') ) {
+        if( $c->config->{full_text_search} ) { 
+            $cond->{body} = { -match => $word }
+        }
+        else {
+            $cond->{body} = { -like => '%' . $word . '%' };
+        }
+
+        $c->fillin_form({ word => $word });
+    }
+
     my $diaries = $c->dbh->query(
         $c->dbh->abstract->select(
             'diary',
-            'SQL_CALC_FOUND_ROWS *',
+            'SQL_CALC_FOUND_ROWS *', 
             $cond,
-            [ 
-                { -desc => [qw/created_on/] }
-            ],
-            ( ($page - 1) * $rows),
+            [ { -desc => [qw/created_on/] } ],
             $rows,
+            $offset,
         )
     )->hashes;
   

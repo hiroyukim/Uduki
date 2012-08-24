@@ -13,8 +13,9 @@ CREATE TABLE diary (
     created_on   date         NOT NULL,
     updated_at   TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE created_on (created_on)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8; 
+    UNIQUE created_on (created_on),
+    FULLTEXT INDEX (body)
+) ENGINE = mroonga COMMENT = 'engine "innodb"' DEFAULT CHARSET utf8 
 
 CREATE TABLE tag (
     id     int(10)        unsigned NOT NULL auto_increment, 
