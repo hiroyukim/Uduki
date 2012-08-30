@@ -2,9 +2,12 @@
 
 <script>
     var wday_jp = ["日","月","火","水","木","金","土"];
-    function showDiarySearch(data) {
+    function showDiarySearch(data,word) {
         var html       = ''; 
         if( data.data.length > 0 ) {
+            $('#diary_pager').html(
+                tmpl("diary_pager_tmpl",{ pager: data.pager, word: word })
+            );
 
             var search_index_html = "";
             var diary_index_tmpl = tmpl("diary_index_tmpl");
@@ -28,13 +31,13 @@
         }
         $('#search_results').html(html);
     }
-    function apiDiarySearch(word) {
+    function apiDiarySearch(word,page) {
         $.ajax({
             type: 'GET',
             url: '/api/diary/search',
-            data: { word: word },
+            data: { word: word, page: page },
             success: function(data){
-                showDiarySearch(data);
+                showDiarySearch(data,word);
             }
         });
     }
@@ -42,6 +45,15 @@
         apiDiarySearch();
     });
 </script>
+
+<script id="diary_pager_tmpl" type="text/html">
+    <% if( pager.previous_page ) { %>
+        <input type="button" value="previous" onclick="apiDiarySearch('<%=word||''%>',<%=pager.previous_page%>)"> 
+    <%}%>
+    <% if( pager.next_page ) { %>
+        <input type="button" value="next" onclick="apiDiarySearch('<%=word||''%>',<%=pager.next_page%>)"> 
+    <%}%>
+</script> 
 
 <script id="diary_index_tmpl" type="text/html">
     <a href="#<%= created_on %>"><%= created_on %>(__REPLACE_WDAY_DATA__)</a>/ 
@@ -54,10 +66,9 @@
     </div> 
 </script> 
 
-<form method="get" action="/diary/search">
-    <input type="text"   name="word" value="">
-    <input type="submit" value="search">
-</form>
+<input id="search_input" type="text" name="word" value="" onkeyup="apiDiarySearch(value)">
+
+<div id="diary_pager"></div>
 
 <div id="search_index"></div>
 
