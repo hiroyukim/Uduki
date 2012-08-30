@@ -85,6 +85,11 @@ get '/api/diary/cal' => sub {
 
 get '/diary/search' => sub {
     my ($c) = @_;
+    $c->render('/diary/search.tt',{});
+};
+
+get '/api/diary/search' => sub {
+    my ($c) = @_;
 
     my $page   = $c->req->param('page') || 1;
     my $rows   = $c->req->param('rows') || 10;
@@ -92,6 +97,7 @@ get '/diary/search' => sub {
 
     my $cond = {};
    
+    # http://search.cpan.org/~frew/SQL-Abstract-1.73/lib/SQL/Abstract.pm#SPECIAL_OPERATORS
     $c->dbh->abstract(SQL::Abstract::Limit->new( 
         limit_dialect => $c->dbh, 
         special_ops => [{
@@ -115,7 +121,6 @@ get '/diary/search' => sub {
         $cond->{id} = { -in => [map { $_->{diary_id} } @diary_tags ] };
     }
 
-    # http://search.cpan.org/~frew/SQL-Abstract-1.73/lib/SQL/Abstract.pm#SPECIAL_OPERATORS
     if( my $word = $c->req->param('word') ) {
         if( $c->config->{full_text_search} ) { 
             $cond->{body} = { -match => $word }
@@ -123,8 +128,6 @@ get '/diary/search' => sub {
         else {
             $cond->{body} = { -like => '%' . $word . '%' };
         }
-
-        $c->fillin_form({ word => $word });
     }
 
     my $diaries = $c->dbh->query(
@@ -141,29 +144,27 @@ get '/diary/search' => sub {
     #FXIME only mysql change +1 see http://blog.64p.org/entry/2012/08/06/140119
     my $found_rows = $c->dbh->query('SELECT FOUND_ROWS()')->array;
     my $total      = $found_rows->[0];
+    my $pager      = Data::Page->new($total, $rows, $page);
 
-    $c->render('/diary/search.tt',{
-        strptime => sub {
-            my ($string,$pattern) = @_;
-            Uduki::DateTime->strptime({
-                string  => $string,
-                pattern => $pattern,
-            });
-        },
-        diaries => $diaries, 
-        pager   => Data::Page->new($total, $rows, $page),
-        getTags    => sub {
-            my $diary_id = shift;
-
-            if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$diary_id)->hashes ) { 
-                return [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes]; 
-            }
-            else {
-                return;
-            }
-        },
+    $c->render_json(+{
+        data   => $diaries, 
+        pager  => { map { $_ => $pager->$_ } qw/total_entries entries_per_page current_page entries_on_this_page first_page last_page first last previous_page next_page/ },
     });
 };
+
+=pod
+get '/api/tag/list' => sub {
+    my ($c) = @_;
+
+    my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$c->req->param('diary_id') )->hashes; 
+
+    return $c->render_json(+{
+        data => @diary_tags 
+            ? [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes] 
+            : []
+    });         
+};
+=cut
 
 post '/api/tag/edit' => sub {
     my ($c) = @_;
