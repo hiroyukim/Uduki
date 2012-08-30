@@ -9,6 +9,7 @@
     <meta name="format-detection" content="telephone=no" />
     <script src="[% uri_for('/static/js/date-utils.min.js') %]"></script>
     <script src="[% uri_for('/static/js/markdown.js') %]"></script>
+    <script src="[% uri_for('/static/js/dateutil.js') %]"></script>
     <script src="[% uri_for('/static/js/micro_template.js') %]"></script>
     <script src="[% uri_for('/static/js/jquery-1.7.2.min.js') %]"></script>
     <script src="[% uri_for('/static/js/jquery-ui-1.8.17.custom.min.js') %]"></script>
