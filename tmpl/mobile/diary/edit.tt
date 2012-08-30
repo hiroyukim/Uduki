@@ -3,43 +3,9 @@
 <h2>[% diary.created_on || created_on %]</h2>
 
 <script>
-    /* FIXME:まとめろ */
-    function apiTagList() {
-        $.getJSON('/api/tag/list',{
-            created_on: '[% diary.created_on || created_on %]' 
-        },function(data){
-            if( data.tags.length > 0 ) {
-                var html = [];
-                html.push('<input type="text" onchange="apiTagEdit(value)">');
-                for( var index in data.tags ) {
-                    var tag = data.tags[index];
-                    html.push( '<a href="/diary/search?tag_id=' + tag.id +'" >' + tag.name + '</span>' ); 
-                }
-
-                $('#apiTagList').html(html.join(" "));
-            }
-            else {
-                $('#apiTagList').html('<input type="text" onchange="apiTagEdit(value)">');
-            }
-        });
-    }
-
-    function apiTagEdit(tag_name) {
-        $.ajax({
-            type: 'POST',
-            url: '/api/tag/edit',
-            data: { tag_name: tag_name, created_on: '[% diary.created_on || created_on %]' },
-            success: function(data){
-                apiTagList();
-            }
-        });
-    }
     $(document).live('pageinit',function(event){
-        apiTagList();
     });
 </script>
-
-<div id="apiTagList"></div>
 
 <form method="POST" action="/diary/edit">
     <input type="hidden" name="created_on" value="">

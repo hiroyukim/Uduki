@@ -85,6 +85,11 @@ get '/api/diary/cal' => sub {
 
 get '/diary/search' => sub {
     my ($c) = @_;
+    $c->render('/diary/search.tt',{});
+};
+
+get '/api/diary/search' => sub {
+    my ($c) = @_;
 
     my $page   = $c->req->param('page') || 1;
     my $rows   = $c->req->param('rows') || 10;
@@ -92,6 +97,7 @@ get '/diary/search' => sub {
 
     my $cond = {};
    
+    # http://search.cpan.org/~frew/SQL-Abstract-1.73/lib/SQL/Abstract.pm#SPECIAL_OPERATORS
     $c->dbh->abstract(SQL::Abstract::Limit->new( 
         limit_dialect => $c->dbh, 
         special_ops => [{
@@ -110,12 +116,6 @@ get '/diary/search' => sub {
         }],
     ));
 
-    if( my $tag_id = $c->req->param('tag_id') ) {
-        my @diary_tags = $c->dbh->query('SELECT diary_id FROM diary_tag WHERE tag_id = ?',$tag_id)->hashes; 
-        $cond->{id} = { -in => [map { $_->{diary_id} } @diary_tags ] };
-    }
-
-    # http://search.cpan.org/~frew/SQL-Abstract-1.73/lib/SQL/Abstract.pm#SPECIAL_OPERATORS
     if( my $word = $c->req->param('word') ) {
         if( $c->config->{full_text_search} ) { 
             $cond->{body} = { -match => $word }
@@ -123,8 +123,6 @@ get '/diary/search' => sub {
         else {
             $cond->{body} = { -like => '%' . $word . '%' };
         }
-
-        $c->fillin_form({ word => $word });
     }
 
     my $diaries = $c->dbh->query(
@@ -141,125 +139,12 @@ get '/diary/search' => sub {
     #FXIME only mysql change +1 see http://blog.64p.org/entry/2012/08/06/140119
     my $found_rows = $c->dbh->query('SELECT FOUND_ROWS()')->array;
     my $total      = $found_rows->[0];
-
-    $c->render('/diary/search.tt',{
-        strptime => sub {
-            my ($string,$pattern) = @_;
-            Uduki::DateTime->strptime({
-                string  => $string,
-                pattern => $pattern,
-            });
-        },
-        diaries => $diaries, 
-        pager   => Data::Page->new($total, $rows, $page),
-        getTags    => sub {
-            my $diary_id = shift;
-
-            if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$diary_id)->hashes ) { 
-                return [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes]; 
-            }
-            else {
-                return;
-            }
-        },
-    });
-};
-
-post '/api/tag/edit' => sub {
-    my ($c) = @_;
-
-    my $tag_name   = $c->req->param('tag_name');
-    my $created_on = $c->req->param('created_on');
-    
-    unless( $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$created_on )->hash ) {
-        $c->dbh->do(q{INSERT INTO diary (body,created_on) VALUES('',?)},{}, 
-            $created_on
-        );
-    }
-
-    my $tag   = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash; 
-    my $diary = $c->dbh->query('SELECT id FROM diary WHERE created_on = ?',$created_on)->hash; 
-
-    unless( $tag ) {
-        $c->dbh->begin_work();
-        try {
-            $c->dbh->do(q{INSERT INTO tag (name) VALUES(?)},{}, 
-                $tag_name,
-            );
-            $c->dbh->commit();
-        }
-        catch {
-            my $err = shift;
-            $c->dbh->rollback();
-            Carp::croak($err);
-        };
-       
-        $tag = $c->dbh->query('SELECT * FROM tag WHERE name = ?',$tag_name)->hash;
-    };
-
-    if( $c->dbh->query('SELECT * FROM diary_tag WHERE diary_id = ? AND tag_id = ?',$diary->{id},$tag->{id})->hash ) { 
-        $c->dbh->begin_work();
-        try {
-            $c->dbh->do(q{DELETE FROM diary_tag WHERE diary_id = ? AND tag_id = ?},{}, 
-                $diary->{id},
-                $tag->{id},
-            );
-            
-            my $diary_tag = $c->dbh->query('SELECT COUNT(id) AS count FROM diary_tag WHERE diary_id != ? AND tag_id = ?',
-                $diary->{id},
-                $tag->{id},
-            )->hash;
-            
-            if( int($diary_tag->{count}) == 0 ) {
-                $c->dbh->do(q{DELETE FROM tag WHERE id = ?},{}, 
-                    $tag->{id},
-                );
-            }
-
-            $c->dbh->commit();
-        }
-        catch {
-            my $err = shift;
-            $c->dbh->rollback();
-            Carp::croak($err);
-        };
-    }
-    else {
-        $c->dbh->begin_work();
-        try {
-            $c->dbh->do(q{INSERT INTO diary_tag (diary_id,tag_id) VALUES(?,?)},{}, 
-                $diary->{id},
-                $tag->{id},
-            );
-            $c->dbh->commit();
-        }
-        catch {
-            my $err = shift;
-            $c->dbh->rollback();
-            Carp::croak($err);
-        };
-    }
+    my $pager      = Data::Page->new($total, $rows, $page);
 
     $c->render_json(+{
-        result => 'ok',
+        data   => $diaries, 
+        pager  => { map { $_ => $pager->$_ } qw/total_entries entries_per_page current_page entries_on_this_page first_page last_page first last previous_page next_page/ },
     });
-};
-
-get '/api/tag/list' => sub {
-    my ($c) = @_;
-
-    my $diary = $c->dbh->query('SELECT id,created_on FROM diary WHERE created_on = ?',$c->req->param('created_on'))->hash;
-
-    if( my @diary_tags = $c->dbh->query('SELECT tag_id FROM diary_tag WHERE diary_id = ?',$diary->{id})->hashes ) {
-        $c->render_json(+{
-            tags => [$c->dbh->query($c->dbh->abstract->select('tag',[qw/id name/],{ id => { -in => [map { $_->{tag_id} } @diary_tags ] } }))->hashes], 
-        });
-    }
-    else {
-        $c->render_json(+{
-            tags => [], 
-        });
-    }
 };
 
 1;

@@ -1,31 +1,77 @@
 [% WRAPPER 'include/layout.tt' %]
 
-<form method="get" action="/diary/search">
-    <input type="text"   name="word" value="">
-    <input type="submit" value="search">
-</form>
+<script>
+    var wday_jp = ["日","月","火","水","木","金","土"];
+    function showDiarySearch(data,word) {
+        var html       = ''; 
+        if( data.data.length > 0 ) {
+            $('#diary_pager').html(
+                tmpl("diary_pager_tmpl",{ pager: data.pager, word: word })
+            );
 
-[% IF diaries && diaries.size() > 0 %]
+            var search_index_html = "";
+            var diary_index_tmpl = tmpl("diary_index_tmpl");
+            $(data.data).each(function(index,value){
+                var row = diary_index_tmpl(value);
+                search_index_html += row.replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()])
+            });
 
-    <div>
-        [% FOR diary IN diaries %]<a href="#[% diary.created_on %]">[% diary.created_on %]([% strptime( diary.created_on, "%Y-%m-%d" ).day_abbr() %])</a>/[% END %]
-    </div>
+            $('#search_index').html(search_index_html);
 
-    [% INCLUDE 'include/pager.tt' WITH pager=pager %]
+            var diary_tmpl = tmpl("diary_tmpl");
+            //FIXME
+            $(data.data).each(function(index,value){
+                var row = diary_tmpl(value);
+                html += row.replace(/__REPLACE_BODY_DATA__/,window.markdown.toHTML(value.body))
+                        .replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()]);
+            });
+        }
+        else {
+            html = "データはありません";
+        }
+        $('#search_results').html(html);
+    }
+    function apiDiarySearch(word,page) {
+        $.ajax({
+            type: 'GET',
+            url: '/api/diary/search',
+            data: { word: word, page: page },
+            success: function(data){
+                showDiarySearch(data,word);
+            }
+        });
+    }
+    $(document).ready(function(){
+        apiDiarySearch();
+    });
+</script>
 
-    [% FOR diary IN diaries %]
-        <h2 id="[% diary.created_on %]" style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;">[% diary.created_on %] ([% strptime( diary.created_on, "%Y-%m-%d" ).day_abbr() %])</h2>
-        <div style="border: 1px solid #cccccc;">
-            <div style="color:#cccccc;border-bottom: 1px solid #cccccc;" id="diary_id_[% diary.id %]">
-                [%- FOR tag IN getTags(diary.id) %]<a href="/diary/search?tag_id=[% tag.id %]">[% tag.name %]</a> [% END %]
-            </div> 
-            <div>[% diary.body | text_markdown | raw  %]</div>
-        </div>
-    [% END %]
-    
-    [% INCLUDE 'include/pager.tt' WITH pager=pager %]
-[% ELSE %]
-    <div>現在記録はありません</div>
-[% END %]
+<script id="diary_pager_tmpl" type="text/html">
+    <% if( pager.previous_page ) { %>
+        <input type="button" value="previous" onclick="apiDiarySearch('<%=word||''%>',<%=pager.previous_page%>)"> 
+    <%}%>
+    <% if( pager.next_page ) { %>
+        <input type="button" value="next" onclick="apiDiarySearch('<%=word||''%>',<%=pager.next_page%>)"> 
+    <%}%>
+</script> 
+
+<script id="diary_index_tmpl" type="text/html">
+    <a href="#<%= created_on %>"><%= created_on %>(__REPLACE_WDAY_DATA__)</a>/ 
+</script> 
+
+<script id="diary_tmpl" type="text/html">
+    <h2 id="<%= created_on %>" style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;"><%= created_on %>(__REPLACE_WDAY_DATA__)</h2>
+    <div style="border: 1px solid #cccccc;" id="diary_id_<%= id %>">
+        <div>__REPLACE_BODY_DATA__</div>
+    </div> 
+</script> 
+
+<input id="search_input" type="text" name="word" value="" onkeyup="apiDiarySearch(value)">
+
+<div id="diary_pager"></div>
+
+<div id="search_index"></div>
+
+<div id="search_results"></div>
 
 [% END %]
