@@ -83,11 +83,6 @@ get '/api/diary/cal' => sub {
     );
 };
 
-get '/diary/search' => sub {
-    my ($c) = @_;
-    $c->render('/diary/search.tt',{});
-};
-
 get '/api/diary/search' => sub {
     my ($c) = @_;
 

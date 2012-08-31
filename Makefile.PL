@@ -18,7 +18,6 @@ WriteMakefile(
         'Test::WWW::Mechanize::PSGI'      => '0',
         'Time::Piece'                     => '1.20',
         'DateTime'                        => '0',
-        'Text::Marddown'                  => '0',
         'SQL::Abstract::Limit'            => '0',
         'HTTP::MobileAgent::Plugin::SmartPhone' => '0.02',
         'DateTime::Format::Strptime'      => '0',

@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use Amon2;
 use File::Spec;
-use Text::Markdown;
 use Text::Xslate;
 use Smart::Args;
 
@@ -20,7 +19,6 @@ sub create {
         'module'   => [ 'Text::Xslate::Bridge::Star' ],
         'function' => {
             c => sub { Amon2->context() },
-            text_markdown => sub { Text::Markdown->new->markdown(@_) },
             uri_with => sub { Amon2->context()->req->uri_with(@_) },
             uri_for  => sub { Amon2->context()->uri_for(@_) },
             static_file => do {
