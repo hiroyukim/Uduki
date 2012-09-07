@@ -11,10 +11,13 @@ markdownで記述する日々のメモ帳です。日付が代わると自動的
 
 # 使用方法 
 
+## mysql
+
     git clone git://github.com/hiroyukim/Uduki.git
     cd Uduki
     cat sql/mysql.sql | mysql -uroot -p
     plackup 
+
 
 # 全文検索エンジンへの対応
 
