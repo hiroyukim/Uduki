@@ -104,7 +104,7 @@ get '/api/diary/search' => sub {
                 my ($placeholder) = $self->_convert('?');
                 my $placeholders  = join ", ", (($placeholder) x @$arg);
                 my $sql           = $self->_sqlcase('match') . " ($label) "
-                                    . $self->_sqlcase('against') . " ($placeholders) ";
+                                    . $self->_sqlcase('against') . " ($placeholders  IN BOOLEAN MODE)";
                 my @bind = $self->_bindtype($field, @$arg);
                 return ($sql, @bind);
             }
@@ -123,16 +123,21 @@ get '/api/diary/search' => sub {
     my $diaries = $c->dbh->query(
         $c->dbh->abstract->select(
             'diary',
-            'SQL_CALC_FOUND_ROWS *', 
+            '*', 
             $cond,
             [ { -desc => [qw/created_on/] } ],
             $rows,
             $offset,
         )
     )->hashes;
-  
-    #FXIME only mysql change +1 see http://blog.64p.org/entry/2012/08/06/140119
-    my $found_rows = $c->dbh->query('SELECT FOUND_ROWS()')->array;
+
+    my ($count_where,@count_where_bind) = $c->dbh->abstract->where(
+        $cond,
+        [],
+    );
+    my $found_rows = $c->dbh->query(
+        "SELECT COUNT(*) AS count FROM diary " . $count_where, @count_where_bind,
+    )->array;
     my $total      = $found_rows->[0];
     my $pager      = Data::Page->new($total, $rows, $page);
 

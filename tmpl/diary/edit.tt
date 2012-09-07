@@ -6,31 +6,32 @@
     var wday_jp = ["日","月","火","水","木","金","土"];
     function showDiarySearch(data,word) {
         var html       = ''; 
-        if( data.data.length > 0 ) {
-            $('#diary_pager').html(
-                tmpl("diary_pager_tmpl",{ pager: data.pager, word: word })
-            );
 
-            var search_index_html = "";
-            var diary_index_tmpl = tmpl("diary_index_tmpl");
-            $(data.data).each(function(index,value){
-                var row = diary_index_tmpl(value);
-                search_index_html += row.replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()])
-            });
+        $('#diary_pager').html(
+            tmpl("diary_pager_tmpl",{ pager: data.pager, word: word })
+        );
 
-            $('#search_index').html(search_index_html);
+        var search_index_html = "";
+        var diary_index_tmpl = tmpl("diary_index_tmpl");
+        $(data.data).each(function(index,value){
+            var row = diary_index_tmpl(value);
+            search_index_html += row.replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()])
+        });
 
-            var diary_tmpl = tmpl("diary_tmpl");
-            //FIXME
-            $(data.data).each(function(index,value){
-                var row = diary_tmpl(value);
-                html += row.replace(/__REPLACE_BODY_DATA__/,window.markdown.toHTML(value.body))
-                        .replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()]);
-            });
-        }
-        else {
+        $('#search_index').html(search_index_html);
+
+        var diary_tmpl = tmpl("diary_tmpl");
+        //FIXME
+        $(data.data).each(function(index,value){
+            var row = diary_tmpl(value);
+            html += row.replace(/__REPLACE_BODY_DATA__/,window.markdown.toHTML(value.body))
+                    .replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()]);
+        });
+
+        if( html == "" ) {
             html = "データはありません";
         }
+
         $('#search_results').html(html);
     }
     function apiDiarySearch(word,page) {
@@ -45,6 +46,7 @@
     }
     
     function preview(body) {
+        // FIXME: show edit rows at now
         $('#preview').html(window.markdown.toHTML(body));
     }
 
@@ -61,6 +63,9 @@
     <%}%>
     <% if( pager.next_page ) { %>
         <input type="button" value="next" onclick="apiDiarySearch('<%=word||''%>',<%=pager.next_page%>)"> 
+    <%}%>
+    <% if( pager.total_entries > 0 ) { %>
+        <%= pager.current_page  %>/<%= pager.last_page %>(<%= pager.total_entries %>)
     <%}%>
 </script> 
 
