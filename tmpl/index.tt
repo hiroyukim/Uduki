@@ -64,20 +64,23 @@
     }
 
     function apiDiaryEdit(created_on) {
-        $.ajax({
-            type: 'POST',
-            url: '/api/diary/edit',
-            data: { created_on: created_on, body: $('#edit_body').val() },
-            success: function(data){
-                if( data.data == 'ok' ) {
-                    var report = $('#report');
-                    report.html('<span style="color:red;">更新完了</span>')
-                    report.show("slow",function(){
-                        report.hide(); 
-                    });
+        var diary_body = $('#edit_body').val();
+        $('#preview').html('<img src="/static/img/loading.gif" />');
+        setTimeout(function(){
+            $.ajax({
+                type: 'POST',
+                url: '/api/diary/edit',
+                data: { created_on: created_on, body: $('#edit_body').val() },
+                success: function(data){
+                    if( data.data == 'ok' ) {
+                        preview(diary_body);
+                    }
+                    else {
+                        preview('error');
+                    }
                 }
-            }
-        });
+            });
+        },300);     
     }
 
     $(document).ready(function(){
