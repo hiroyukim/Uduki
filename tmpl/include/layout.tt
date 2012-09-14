@@ -33,8 +33,7 @@
                 <a class="brand" href="/">Uduki</a>
                 <div class="nav-collapse">
                     <ul class="nav">
-                        <li><a href="/">編集</a></li>
-                        <li><a href="/diary/cal">月別</a></li>
+                        <li><a href="/diary/cal">カレンダー</a></li>
                     </ul>
                 </div>
             </div>

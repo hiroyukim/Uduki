@@ -10,15 +10,16 @@ use SQL::Abstract::Limit;
 
 any '/' => sub {
     my ($c) = @_;
-    $c->redirect('/diary/edit');
+    $c->render('/index.tt',{
+        created_on => Uduki::DateTime->today()->strftime("%Y-%m-%d"), 
+    });
 };
 
-any '/diary/edit' => sub {
+any '/api/diary/edit' => sub {
     my ($c) = @_;
 
     my $created_on = $c->req->param('created_on') || Uduki::DateTime->today()->strftime("%Y-%m-%d");
-
-    my $diary = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$created_on )->hash; 
+    my $diary      = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$created_on )->hash; 
 
     if( $c->req->method eq 'POST' && $created_on && $c->req->param('body') ) {
         $c->dbh->begin_work();
@@ -40,14 +41,10 @@ any '/diary/edit' => sub {
             $c->dbh->rollback();
             Carp::croak($err);
         };
-
-        return $c->redirect('/');
     }
 
-    $c->fillin_form($diary) if $diary;
-    $c->render('/diary/edit.tt',{
-        diary      => $diary, 
-        created_on => $created_on,
+    $c->render_json(+{
+        data => 'ok',
     });
 };    
 
@@ -103,8 +100,10 @@ get '/api/diary/search' => sub {
                 my $label         = $self->_quote($field);
                 my ($placeholder) = $self->_convert('?');
                 my $placeholders  = join ", ", (($placeholder) x @$arg);
-                my $sql           = $self->_sqlcase('match') . " ($label) "
+                #my $sql           = $self->_sqlcase('match') . " (@{[$label x @$arg]}) "
+                my $sql           = $self->_sqlcase('match') . " (@{[join q{,}, map { $label } @$arg]}) "
                                     . $self->_sqlcase('against') . " ($placeholders  IN BOOLEAN MODE)";
+                                    warn $sql;
                 my @bind = $self->_bindtype($field, @$arg);
                 return ($sql, @bind);
             }
@@ -113,11 +112,17 @@ get '/api/diary/search' => sub {
 
     if( my $word = $c->req->param('word') ) {
         if( $c->config->{full_text_search} ) { 
-            $cond->{body} = { -match => $word }
+            $cond->{body} = { -match => [split /\s+/,$word] }
         }
         else {
-            $cond->{body} = { -like => '%' . $word . '%' };
+            $cond->{body} = [ 
+                -and => map { +{ ( /^-(.+)$/ ? 'not like' : 'like' ) => '%' . ($1 || $_) . '%' }  } split /\s+/, $word 
+            ];
         }
+    }
+
+    if( $c->req->param('created_on') ) {
+        $cond->{created_on} = $c->req->param('created_on');
     }
 
     my $diaries = $c->dbh->query(
