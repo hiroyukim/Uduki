@@ -1,4 +1,138 @@
 [% WRAPPER 'include/layout.tt' %]
 
+<h2>[% diary.created_on || created_on %]</h2>
+
+<script>
+    var wday_jp = ["日","月","火","水","木","金","土"];
+    function showDiarySearch(data,word) {
+        var html       = ''; 
+
+        $('#diary_pager').html(
+            tmpl("diary_pager_tmpl",{ pager: data.pager, word: word })
+        );
+
+        var search_index_html = "";
+        var diary_index_tmpl = tmpl("diary_index_tmpl");
+        $(data.data).each(function(index,value){
+            var row = diary_index_tmpl(value);
+            search_index_html += row.replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()])
+        });
+
+        $('#search_index').html(search_index_html);
+
+        var diary_tmpl = tmpl("diary_tmpl");
+        //FIXME
+        $(data.data).each(function(index,value){
+            var row = diary_tmpl(value);
+            html += row.replace(/__REPLACE_BODY_DATA__/,window.markdown.toHTML(value.body))
+                    .replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()]);
+        });
+
+        if( html == "" ) {
+            html = "データはありません";
+        }
+
+        $('#search_results').html(html);
+    }
+    function apiDiarySearch(word,page,created_on) {
+        $.ajax({
+            type: 'GET',
+            url: '/api/diary/search',
+            data: { word: word, page: page, created_on: created_on },
+            success: function(data){
+                showDiarySearch(data,word);
+            }
+        });
+    }
+    
+    function preview(body) {
+        // FIXME: show edit rows at now
+        $('#preview').html(window.markdown.toHTML(body));
+    }
+
+    function apiDiary(created_on) {
+        $.ajax({
+            type: 'GET',
+            url: '/api/diary/search',
+            data: { created_on: created_on },
+            success: function(data){
+                var diary_body = data.data[0].body;
+                $('#edit_body').val(diary_body);        
+                preview(diary_body);
+            }
+        });
+    }
+
+    function apiDiaryEdit(created_on) {
+        $.ajax({
+            type: 'POST',
+            url: '/api/diary/edit',
+            data: { created_on: created_on, body: $('#edit_body').val() },
+            success: function(data){
+                if( data.data == 'ok' ) {
+                    var report = $('#report');
+                    report.html('<span style="color:red;">更新完了</span>')
+                    report.show("slow",function(){
+                        report.hide(); 
+                    });
+                }
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        apiDiarySearch();
+        preview($('#edit_body').val());
+        $("#mainright").tabs();
+        apiDiary("[% created_on %]");
+    });
+</script>
+
+<script id="diary_pager_tmpl" type="text/html">
+    <% if( pager.previous_page ) { %>
+        <input type="button" value="previous" onclick="apiDiarySearch('<%=word||''%>',<%=pager.previous_page%>),''"> 
+    <%}%>
+    <% if( pager.next_page ) { %>
+        <input type="button" value="next" onclick="apiDiarySearch('<%=word||''%>',<%=pager.next_page%>,'')"> 
+    <%}%>
+    <% if( pager.total_entries > 0 ) { %>
+        <%= pager.current_page  %>/<%= pager.last_page %>(<%= pager.total_entries %>)
+    <%}%>
+</script> 
+
+<script id="diary_index_tmpl" type="text/html">
+    <a href="#<%= created_on %>"><%= created_on %>(__REPLACE_WDAY_DATA__)</a>/ 
+</script> 
+
+<script id="diary_tmpl" type="text/html">
+    <h2 id="<%= created_on %>" style="color:#cccccc;border-bottom: 1px solid #cccccc;margin-bottom:0em;"><%= created_on %>(__REPLACE_WDAY_DATA__)</h2>
+    <div style="border: 1px solid #cccccc;" id="diary_id_<%= id %>">
+        <div>__REPLACE_BODY_DATA__</div>
+    </div> 
+</script> 
+
+
+<div id="mainleft" style=" width: 48%; float:left;">
+    <div id="report"></div>
+    <form>
+        <input type="hidden" name="created_on" value="">
+        <textarea id="edit_body" name="body" cols="100%" rows="30" onkeyup="preview(value)"></textarea>
+        <div><input type="button" value="編集" onclick="apiDiaryEdit()"></div>
+    </form>
+</div>
+
+<div id="mainright" style="margin-left:52%;">
+    <ul style="height:50px;">
+        <li><a href="#preview"><span>preview</span></a></li>
+        <li><a href="#search"><span>search</span></a></li>
+    </ul>
+    <div id="preview"></div>
+    <div id="search">
+        <input id="search_input" type="text" name="word" value="" onkeyup="apiDiarySearch(value)">
+        <div id="diary_pager"></div>
+        <div id="search_index"></div>
+        <div id="search_results"></div>
+    </div>
+</div>
 
 [% END %]
