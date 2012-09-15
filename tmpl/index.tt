@@ -41,6 +41,9 @@
             data: { word: word, page: page, created_on: created_on },
             success: function(data){
                 showDiarySearch(data,word);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                preview(textStatus);
             }
         });
     }
@@ -59,6 +62,9 @@
                 var diary_body = data.data[0].body;
                 $('#edit_body').val(diary_body);        
                 preview(diary_body);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                preview(textStatus);
             }
         });
     }
@@ -78,6 +84,9 @@
                     else {
                         preview('error');
                     }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    preview(textStatus);
                 }
             });
         },300);     
