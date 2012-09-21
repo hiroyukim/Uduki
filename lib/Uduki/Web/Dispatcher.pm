@@ -21,7 +21,7 @@ any '/api/diary/edit' => sub {
     my $created_on = $c->req->param('created_on') || Uduki::DateTime->today()->strftime("%Y-%m-%d");
     my $diary      = $c->dbh->query('SELECT * FROM diary WHERE created_on = ?',$created_on )->hash; 
 
-    if( $c->req->method eq 'POST' && $created_on && $c->req->param('body') ) {
+    if( $c->req->method eq 'POST' && $c->req->param('body') ) {
         $c->dbh->begin_work();
         try {
             unless($diary) {
@@ -43,9 +43,7 @@ any '/api/diary/edit' => sub {
         };
     }
 
-    $c->render_json(+{
-        data => 'ok',
-    });
+    return $c->render_json(+{});
 };    
 
 get '/diary/cal' => sub {
