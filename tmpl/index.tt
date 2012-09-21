@@ -24,6 +24,7 @@
         //FIXME
         $(data.data).each(function(index,value){
             var row = diary_tmpl(value);
+
             html += row.replace(/__REPLACE_BODY_DATA__/,window.markdown.toHTML(value.body))
                     .replace(/__REPLACE_WDAY_DATA__/,wday_jp[dateutil.parse(value.created_on).getDay()]);
         });
@@ -33,6 +34,7 @@
         }
 
         $('#search_results').html(html);
+        highlight();
     }
     function apiDiarySearch(word,page,created_on) {
         $.ajax({
@@ -51,6 +53,12 @@
     function preview(body) {
         // FIXME: show edit rows at now
         $('#preview').html(window.markdown.toHTML(body));
+        highlight();
+    }
+
+    function highlight() {
+        $('pre code').addClass('prettyprint');
+        prettyPrint();
     }
 
     function apiDiary(created_on) {
@@ -78,12 +86,7 @@
                 url: '/api/diary/edit',
                 data: { created_on: created_on, body: $('#edit_body').val() },
                 success: function(data){
-                    if( data.data == 'ok' ) {
-                        preview(diary_body);
-                    }
-                    else {
-                        preview('error');
-                    }
+                    preview(diary_body);
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     preview(textStatus);
@@ -98,6 +101,7 @@
         $("#mainright").tabs();
         apiDiary("[% created_on %]");
     });
+
 </script>
 
 <script id="diary_pager_tmpl" type="text/html">
