@@ -34,7 +34,6 @@
         }
 
         $('#search_results').html(html);
-        highlight();
     }
     function apiDiarySearch(word,page,created_on) {
         $.ajax({
@@ -53,12 +52,6 @@
     function preview(body) {
         // FIXME: show edit rows at now
         $('#preview').html(window.markdown.toHTML(body));
-        highlight();
-    }
-
-    function highlight() {
-        $('pre code').addClass('prettyprint');
-        prettyPrint();
     }
 
     function apiDiary(created_on) {

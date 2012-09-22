@@ -13,10 +13,8 @@
     <script src="[% uri_for('/static/js/micro_template.js') %]"></script>
     <script src="[% uri_for('/static/js/jquery-1.7.2.min.js') %]"></script>
     <script src="[% uri_for('/static/js/jquery-ui-1.8.23.custom.min.js') %]"></script>
-    <script src="[% uri_for('/static/js/prettify.js') %]"></script>
     <link href="[% uri_for('/static/bootstrap/bootstrap.css') %]" rel="stylesheet" type="text/css" />
     <link href="[% static_file('/static/css/main.css') %]" rel="stylesheet" type="text/css" media="screen" />
-    <link href="[% static_file('/static/css/prettify.css') %]" rel="stylesheet" type="text/css" media="screen" />
     <link href="[% static_file('/static/css/jquery-ui-1.8.23.custom.css') %]" rel="stylesheet" type="text/css" media="screen" />
     <script src="[% uri_for('/static/bootstrap/bootstrap-dropdown.js') %]"></script>
     <script src="[% static_file('/static/js/main.js') %]"></script>
